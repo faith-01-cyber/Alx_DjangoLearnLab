@@ -1,8 +1,10 @@
 ## Retrieve Book
 
 ```python
-Book.objects.all()
+# Retrieve the book we just created using .get()
+book = Book.objects.get(title="1984")
+book
 ```
 
 # Output:
-# <QuerySet [<Book: 1984>]>
+# <Book: 1984>

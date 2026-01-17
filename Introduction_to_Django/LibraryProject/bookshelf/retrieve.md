@@ -1,7 +1,7 @@
 ## Retrieve Book
 
 ```python
-# Retrieve the book we just created using .get()
+# Retrieve the book using .get()
 book = Book.objects.get(title="1984")
 book
 ```

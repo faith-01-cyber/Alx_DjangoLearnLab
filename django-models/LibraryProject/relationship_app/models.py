@@ -1,29 +1,39 @@
-from django.db import models
-from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import permission_required
+from .models import Book
+from .forms import BookForm  # Make sure you have a simple ModelForm for Book
 
-# Existing models (Author, Book, Library, etc.) can stay above or below
+# Add a new book
+@permission_required('relationship_app.can_add_book')
+def add_book(request):
+    if request.method == 'POST':
+        form = BookForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('list_books')
+    else:
+        form = BookForm()
+    return render(request, "relationship_app/book_form.html", {"form": form})
 
-class UserProfile(models.Model):
-    ROLE_CHOICES = [
-        ("Admin", "Admin"),
-        ("Librarian", "Librarian"),
-        ("Member", "Member"),
-    ]
+# Edit a book
+@permission_required('relationship_app.can_change_book')
+def edit_book(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    if request.method == 'POST':
+        form = BookForm(request.POST, instance=book)
+        if form.is_valid():
+            form.save()
+            return redirect('list_books')
+    else:
+        form = BookForm(instance=book)
+    return render(request, "relationship_app/book_form.html", {"form": form})
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="Member")
-
-    def __str__(self):
-        return f"{self.user.username} - {self.role}"
-
-
-# Signal to auto-create UserProfile
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-
+# Delete a book
+@permission_required('relationship_app.can_delete_book')
+def delete_book(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    if request.method == 'POST':
+        book.delete()
+        return redirect('list_books')
+    return render(request, "relationship_app/book_confirm_delete.html", {"book": book})
 

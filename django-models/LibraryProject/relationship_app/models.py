@@ -1,39 +1,33 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import permission_required
-from .models import Book
-from .forms import BookForm  # Make sure you have a simple ModelForm for Book
+from django.db import models
 
-# Add a new book
-@permission_required('relationship_app.can_add_book')
-def add_book(request):
-    if request.method == 'POST':
-        form = BookForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('list_books')
-    else:
-        form = BookForm()
-    return render(request, "relationship_app/book_form.html", {"form": form})
 
-# Edit a book
-@permission_required('relationship_app.can_change_book')
-def edit_book(request, pk):
-    book = get_object_or_404(Book, pk=pk)
-    if request.method == 'POST':
-        form = BookForm(request.POST, instance=book)
-        if form.is_valid():
-            form.save()
-            return redirect('list_books')
-    else:
-        form = BookForm(instance=book)
-    return render(request, "relationship_app/book_form.html", {"form": form})
+class Author(models.Model):
+    name = models.CharField(max_length=255)
 
-# Delete a book
-@permission_required('relationship_app.can_delete_book')
-def delete_book(request, pk):
-    book = get_object_or_404(Book, pk=pk)
-    if request.method == 'POST':
-        book.delete()
-        return redirect('list_books')
-    return render(request, "relationship_app/book_confirm_delete.html", {"book": book})
+    def __str__(self):
+        return self.name
+
+
+class Book(models.Model):
+    title = models.CharField(max_length=255)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.title
+
+
+class Library(models.Model):
+    name = models.CharField(max_length=255)
+    books = models.ManyToManyField(Book)
+
+    def __str__(self):
+        return self.name
+
+
+class Librarian(models.Model):
+    name = models.CharField(max_length=255)
+    library = models.OneToOneField(Library, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 

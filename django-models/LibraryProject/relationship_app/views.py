@@ -5,14 +5,11 @@ from .models import Book, Library
 
 
 # Function-based view: list all books
-from django.http import HttpResponse
+from django.shortcuts import render
 
 def list_books(request):
     books = Book.objects.all()
-    output = []
-    for book in books:
-        output.append(f"{book.title} by {book.author.name}")
-    return HttpResponse("\n".join(output))
+    return render(request, 'relationship_app/list_books.html', {'books': books})
 
 
 # Class-based view: library detail

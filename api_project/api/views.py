@@ -3,7 +3,7 @@ from .models import Book
 from .serializers import BookSerializer
 
 
-class BookList(ListAPIView):
+class BookList(List.APIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
 

@@ -1,15 +1,21 @@
 from django import forms
-from .models import Post
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import Post, Comment
 
-# Form for creating/editing posts
+# Form for creating/editing a Post
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         fields = ['title', 'content']
 
-# Optional: custom user registration form
+# Form for adding a Comment
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+
+# Custom user registration form
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
 

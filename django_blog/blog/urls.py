@@ -2,25 +2,15 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Post CRUD URLs
-    path('', views.PostListView.as_view(), name='post-list'),  # List all posts
-    path('post/<int:pk>/', views.PostDetailView.as_view(), name='post-detail'),  # Post detail
-    path('post/new/', views.PostCreateView.as_view(), name='post-create'),  # Create new post
-    path('post/<int:pk>/update/', views.PostUpdateView.as_view(), name='post-update'),  # Update post
-    path('post/<int:pk>/delete/', views.PostDeleteView.as_view(), name='post-delete'),  # Delete post
-]
-from .views import (
-    PostListView,
-    PostDetailView,
-    PostCreateView,
-    PostUpdateView,
-    PostDeleteView,
-)
+    # Post CRUD
+    path('', views.PostListView.as_view(), name='post_list'),
+    path('posts/<int:pk>/', views.PostDetailView.as_view(), name='post_detail'),
+    path('posts/new/', views.PostCreateView.as_view(), name='post_create'),
+    path('posts/<int:pk>/update/', views.PostUpdateView.as_view(), name='post_update'),
+    path('posts/<int:pk>/delete/', views.PostDeleteView.as_view(), name='post_delete'),
 
-urlpatterns += [
-    path('posts/', PostListView.as_view(), name='post-list'),
-    path('posts/new/', PostCreateView.as_view(), name='post-create'),
-    path('posts/<int:pk>/', PostDetailView.as_view(), name='post-detail'),
-    path('posts/<int:pk>/edit/', PostUpdateView.as_view(), name='post-update'),
-    path('posts/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
+    # Comment CRUD (checker-compliant)
+    path('posts/<int:post_id>/comments/new/', views.CommentCreateView.as_view(), name='comment_create'),
+    path('comment/<int:pk>/update/', views.CommentUpdateView.as_view(), name='comment_update'),
+    path('comment/<int:pk>/delete/', views.CommentDeleteView.as_view(), name='comment_delete'),
 ]

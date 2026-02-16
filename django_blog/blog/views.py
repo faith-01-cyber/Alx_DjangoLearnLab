@@ -1,19 +1,22 @@
-from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .models import Post, Comment
-from .forms import PostForm, CommentForm
-
-# ======================
-# Post Views
-# ======================
+from django.views.generic import ListView
+from .models import Post
+from taggit.models import Tag
 
 class PostListView(ListView):
     model = Post
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
-    ordering = ['-published_date']  # updated to match your Post model
+    ordering = ['-published_date']
+
+class PostByTagListView(ListView):
+    model = Post
+    template_name = 'blog/post_list.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        tag_slug = self.kwargs.get('tag_slug')
+        tag = Tag.objects.get(slug=tag_slug)
+        return Post.objects.filter(tags=tag).order_by('-published_date')
 
 class PostDetailView(DetailView):
     model = Post

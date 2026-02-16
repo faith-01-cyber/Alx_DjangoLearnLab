@@ -13,7 +13,7 @@ class PostListView(ListView):
     model = Post
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
-    ordering = ['-created_at']  # updated to match your Post model
+    ordering = ['-published_date']  # updated to match your Post model
 
 class PostDetailView(DetailView):
     model = Post
@@ -85,3 +85,17 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('post-detail', kwargs={'pk': self.object.post.id})
+
+from django.shortcuts import render
+from django.db.models import Q
+from .models import Post
+
+def search_posts(request):
+    query = request.GET.get('q', '')  # 'q' is the search bar name
+    results = Post.objects.filter(
+        Q(title__icontains=query) |
+        Q(content__icontains=query) |
+        Q(tags__name__icontains=query)
+    ).distinct()
+
+    return render(request, 'blog/search_results.html', {'results': results, 'query': query})

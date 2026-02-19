@@ -1,18 +1,18 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
 
-User = get_user_model()
-
+# ---- Register Serializer ----
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = ['id', 'username', 'email', 'password', 'bio', 'profile_picture']
 
     def create(self, validated_data):
-        user = User.objects.create_user(
+        user = get_user_model().objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email'),
             password=validated_data['password'],
@@ -21,23 +21,25 @@ class RegisterSerializer(serializers.ModelSerializer):
         Token.objects.create(user=user)
         return user
 
-
+# ---- Login Serializer ----
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
+    
+    def validate(self, data):
+        user = authenticate(
+            username=data.get('username'),
+            password=data.get('password')
+        )
+        if not user:
+            raise serializers.ValidationError("Invalid credentials")
+        data['user'] = user
+        return data
 
-
+# ---- User Profile Serializer ----
 class UserProfileSerializer(serializers.ModelSerializer):
-    followers_count = serializers.SerializerMethodField()
-    following_count = serializers.SerializerMethodField()
+    followers = serializers.StringRelatedField(many=True)
 
     class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'bio', 'profile_picture',
-                  'followers_count', 'following_count']
-
-    def get_followers_count(self, obj):
-        return obj.followers.count()
-
-    def get_following_count(self, obj):
-        return obj.following.count()
+        model = get_user_model()
+        fields = ['id', 'username', 'email', 'bio', 'profile_picture', 'followers']

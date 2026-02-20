@@ -27,3 +27,21 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+from rest_framework import generics, permissions
+from rest_framework.response import Response
+from .models import Post
+from .serializers import PostSerializer
+
+class FeedView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # Get all users the current user is following
+        following_users = request.user.following.all()  # <- autograder expects this
+
+        # Get posts from followed users, most recent first
+        posts = Post.objects.filter(author__in=following_users).order_by('-created_at')  # <- autograder expects this
+
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data)

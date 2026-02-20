@@ -1,54 +1,25 @@
-from rest_framework.views import APIView
+from rest_framework import status, permissions
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.auth import authenticate
-from rest_framework.authtoken.models import Token
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.shortcuts import get_object_or_404
+from .models import User
+from posts.models import Post
+from posts.serializers import PostSerializer
 
-from .serializers import RegisterSerializer, LoginSerializer, UserProfileSerializer
-from django.contrib.auth import get_user_model
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def follow_user(request, user_id):
+    user_to_follow = get_object_or_404(User, id=user_id)
+    if user_to_follow == request.user:
+        return Response({"detail": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+    request.user.following.add(user_to_follow)
+    return Response({"detail": f"You are now following {user_to_follow.username}."})
 
-User = get_user_model()
-
-
-class RegisterView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            token = Token.objects.get(user=user)
-            return Response({
-                "message": "User registered successfully",
-                "token": token.key
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class LoginView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = authenticate(
-                username=serializer.validated_data['username'],
-                password=serializer.validated_data['password']
-            )
-            if user:
-                token, created = Token.objects.get_or_create(user=user)
-                return Response({
-                    "message": "Login successful",
-                    "token": token.key
-                })
-            return Response({"error": "Invalid credentials"}, status=400)
-        return Response(serializer.errors, status=400)
-
-
-class ProfileView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        serializer = UserProfileSerializer(request.user)
-        return Response(serializer.data)
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def unfollow_user(request, user_id):
+    user_to_unfollow = get_object_or_404(User, id=user_id)
+    if user_to_unfollow == request.user:
+        return Response({"detail": "You cannot unfollow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+    request.user.following.remove(user_to_unfollow)
+    return Response({"detail": f"You have unfollowed {user_to_unfollow.username}."})
